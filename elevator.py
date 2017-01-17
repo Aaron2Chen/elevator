@@ -4,14 +4,23 @@ import sys
 import time
 import random
 import math
+
+
 '''建立電梯'''
 class elevator:
-    def __init__(self, id, floor , dir , psg, addTime):
-        self.id=id 
+    ''' floor=電梯在第幾樓
+        dir=up,down,stop
+        psg=number of people 0~10
+        addTime=開關啓閉進出時間, default=0
+        goToFloor=控制要去的樓層, default=0
+    '''
+    def __init__(self, floor , dir , psg, addTime=0,goToFloor=0):
+        
         self.floor = floor #電梯在第幾樓
         self.dir=dir #up,down,stop 
         self.psg=psg #number of people 0~10
-        self.addTime=addTime #number of people 0~10
+        self.addTime=addTime #開關啓閉進出時間
+        self.goToFloor=goToFloor #控制要去的樓層
     '''進電梯'''
     def getIn(self,psg):
         if len(self.psg)<10:
@@ -34,13 +43,22 @@ class elevator:
                 tempDir=True #電梯停不停
                 self.getOut(psg)#離開電梯
                 self.addTime+=1#每離開一個人花費一秒
-        if position[self.floor]: #elevator.floor樓有人要搭電梯
+        if position[self.floor] and not self.goToFloor: #elevator.floor樓有人要搭電梯
             tempDir=True #電梯停不停 
             for psg in list(position[self.floor]): #elevator.floor樓所有乘客
                 if self.notFull:#電梯未滿載
                     self.getIn(psg)#進入電梯
                     position[self.floor].remove(psg)#離開樓層
                     self.addTime+=1#每進入一個人花費一秒
+        elif self.floor==self.goToFloor:#抵達要求樓層
+            tempDir=True #電梯停不停
+            for psg in list(position[self.floor]): #elevator.floor樓所有乘客
+                if self.notFull:#電梯未滿載
+                    self.getIn(psg)#進入電梯
+                    position[self.floor].remove(psg)#離開樓層
+                    self.addTime+=1#每進入一個人花費一秒
+            self.goToFloor=0
+
         return tempDir
     '''選樓層'''
     def moveToNextFloor(self,position):
@@ -77,10 +95,10 @@ class elevator:
         tempB = 0
         for x in b:
             if x:
-                tempB=x[0][0]#等待電梯的人最高樓層
+                tempB=x[0][0]#等待電梯的人最低樓層
                 break   
         if a:
-            tempA=min(a,key=lambda item:item[1])[1]#抓乘客抵達樓層最大值
+            tempA=min(a,key=lambda item:item[1])[1]#抓乘客抵達樓層最小值
          
         return min(tempA,tempB)
 
@@ -91,25 +109,45 @@ def isAnyoneWait(pasition):
             return True
     return False
 
+def chooseFloor(position):
+    lengths=[]
+    for p in position:
+        lengths.append(len(p))
+    
+    return lengths
+
+def maybeFaster(E,position):
+    nums=chooseFloor(position)
+    E.goToFloor=nums.index(max(nums))
+    if E.goToFloor > E.floor:
+        E.dir='up'
+    else:
+        E.dir='down'
+
+def maybeFaster2(E,position):
+    nums=chooseFloor(position)
+    nums.pop(nums.index(max(nums))) 
+    E.goToFloor=nums.index(max(nums))
+    if E.goToFloor > E.floor:
+        E.dir='up'
+    else:
+        E.dir='down'
+
 
 def main():
     #計時
-        totalTime=0
-    #for i in range(100):        
-        #a=[179,208,306,93,859,984,55,9,271,33]
-        #a=[random.randint(1, 18) for _ in range(10)]#產生10個1~1000的亂數
-        #b=[random.randint(1, 18) for _ in range(10)]#產生10個1~1000的亂數
-        
+    totalTime=0
+    muti=1
+    for i in range(muti):        
         '''建立乘客'''
-        a=[(random.randint(1, 18),random.randint(1, 18)) for _ in range(180)]#產生10個1~1000的亂數
+        #a=[(random.randint(1, 18),random.randint(1, 18)) for _ in range(180)]#產生10個1~1000的亂數
         #a=[(1, 5), (1, 3), (1, 14), (1, 11), (1, 6), (1, 13), (1, 15), (1, 7), (1, 9), (1, 9), (1, 9), (18, 9), (2, 9)]
-        #a=[(17, 5), (11, 3), (13, 8), (5, 16), (18, 16), (3, 6), (7, 1), (2, 1), (6, 13), (18, 8), (15, 9), (1, 8), (9, 12), (7, 3), (13, 6), (9, 10), (4, 6), (17, 16), (17, 14), (13, 16), (18, 10), (12, 18), (18, 8), (2, 4), (3, 1), (17, 13), (9, 11), (6, 9), (17, 3), (7, 14), (15, 10), (7, 1), (2, 16), (3, 16), (4, 2), (3, 4), (4, 7), (8, 2), (14, 18), (1, 10), (10, 5), (3, 15), (15, 9), (9, 2), (16, 7), (18, 11), (1, 16)]	
+        a=[(17, 5), (11, 3), (13, 8), (5, 16), (18, 16), (3, 6), (7, 1), (2, 1), (6, 13), (18, 8), (15, 9), (1, 8), (9, 12), (7, 3), (13, 6), (9, 10), (4, 6), (17, 16), (17, 14), (13, 16), (18, 10), (12, 18), (18, 8), (2, 4), (3, 1), (17, 13), (9, 11), (6, 9), (17, 3), (7, 14), (15, 10), (7, 1), (2, 16), (3, 16), (4, 2), (3, 4), (4, 7), (8, 2), (14, 18), (1, 10), (10, 5), (3, 15), (15, 9), (9, 2), (16, 7), (18, 11), (1, 16)]	
         
         #去除重複
         for t in a:
             if t[0]== t[1] :
                 a.remove(t)
-        #print ("*序列",a)
         
         #依照抵達樓層排序
         #a.sort(key=lambda tup: tup[1])
@@ -117,58 +155,73 @@ def main():
         
         #依照所在樓成排序
         a.sort()
-        #print("*序列",a)
-        
+                
         position=[[] for i in range(19)]#list[0:18]的二維list
+        #每層樓要搭電梯的人 放在同一層樓
         for t in a:
             position[t[0]].append(t)
-        #print (position)#每層樓要搭電梯的人 放在同一層樓
-        #建立電梯
-        #E_1 =elevator(1,0,'up',[],0)#等待人數最多的樓層 低往高
-        #E_2 =elevator(2,19,'down',[],0)#等待人數最多的樓層 高往底
-        #E_3 =elevator(3,8,'up',[],0)#抵達相同樓層 人數最多 走訪
-
-        E_1 =elevator(1,0,'up',[],0)#低往高
-        E_2 =elevator(2,0,'up',[],0)#低往高
-        E_3 =elevator(3,0,'up',[],0)#低往高
-        #顯示每層樓要搭電梯的人
-        '''for p in position:
-            if p:
-                print (p)'''
+        #print (position)
         
+        #建立電梯
+        E_1 =elevator(9,'up',[])
+        E_2 =elevator(9,'up',[])
+        E_3 =elevator(9,'up',[])
+
+        #顯示每層樓要搭電梯的人
+        for p in position:
+            if p:
+                print (p)
+        
+
         ##1~18樓
         while isAnyoneWait(position) or E_1.psg or E_2.psg or E_3.psg :
-            #sumTime+=10 #電梯移動一層樓的時間
+            #假設電梯移動一層樓的時間
             totalTime+=1
+
+            '''E1'''
+            if not E_1.psg:
+                #print('E1 Idle')
+                maybeFaster(E_1,position)
+
             if E_1.addTime==0:            
                 E_1.moveToNextFloor(position)#移動電梯            
                 if E_1.takeElevator(position):#True停 False不停
                     E_1.addTime+=4#電梯開關加啟動煞車時間                
-                    print('\nFloor=',E_1.floor,' 等電梯的人=',position)
-                    print('\n\televator=1 乘客=',len(E_1.psg),E_1.psg)
+                    print('\nFloor=',E_1.floor,' 等電梯的人=',position,'\n\televator=1 乘客=',len(E_1.psg),E_1.psg)
             else:
                 E_1.addTime-=1
-            
+
+            '''E2'''
+            if not E_2.psg:
+                #print('E2 Idle')
+                maybeFaster2(E_2,position)
+
             if E_2.addTime==0:    
                 E_2.moveToNextFloor(position)#移動電梯
                 if E_2.takeElevator(position):#True停 False不停
                     E_2.addTime+=4 #電梯開關加啟動煞車時間
-                    print('\nFloor=',E_2.floor,' 等電梯的人=',position)
-                    print('\n\televator=2 乘客=',len(E_2.psg),E_2.psg)
+                    print('\nFloor=',E_2.floor,' 等電梯的人=',position,'\n\televator=2 乘客=',len(E_2.psg),E_2.psg)
             else:
                 E_2.addTime-=1
+
+            '''E3'''
+            #if not E_3.psg:
+                #print('E3 Idle')
+                
 
             if E_3.addTime==0:    
                 E_3.moveToNextFloor(position)#移動電梯
                 if E_3.takeElevator(position):#True停 False不停
                     E_3.addTime+=4 #電梯開關加啟動煞車時間
-                    print('\nFloor=',E_3.floor,' 等電梯的人=',position)
-                    print('\n\televator=3 乘客=',len(E_3.psg),E_3.psg)
+                    print('\nFloor=',E_3.floor,' 等電梯的人=',position,'\n\televator=3 乘客=',len(E_3.psg),E_3.psg)
             else:
-                E_3.addTime-=1
-                
+                E_3.addTime-=1  
+            
             #print(E_1.addTime,'\t',E_2.addTime,'\t',E_3.addTime)
-        print(totalTime)
+            #end while
+        #print(totalTime)
+    print(totalTime/muti)
 
 if __name__ == '__main__':
     main()
+    input('...')
