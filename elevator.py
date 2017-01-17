@@ -4,6 +4,7 @@ import sys
 import time
 import random
 import math
+'''建立電梯'''
 class elevator:
     def __init__(self, id, floor , dir , psg):
         self.id=id 
@@ -27,12 +28,15 @@ class elevator:
         else:
             return False
     '''
-##是否還有人在等電梯
+
+'''是否還有人在等電梯'''
 def waitElevator(pasition):
     for p in pasition:
         if p:
             return True
     return False
+
+'''找最 高 要到幾樓'''
 def findMaxFloor(a,b):
     
     tempA = 0
@@ -44,9 +48,20 @@ def findMaxFloor(a,b):
         tempA=max(a,key=lambda item:item[1])[1]#抓乘客抵達樓層最大值
          
     return max(tempA,tempB)
-def findMinFloor():
-    return
-##搭電梯
+
+'''找最 低 要到幾樓'''
+def findMinFloor(a,b):
+    tempA = 0
+    tempB = 0
+    for x in b:
+        if x:
+            tempB=x[0][0]#等待電梯的人最高樓層
+            break   
+    if a:
+        tempA=min(a,key=lambda item:item[1])[1]#抓乘客抵達樓層最大值
+         
+    return min(tempA,tempB)
+'''搭電梯'''
 def takeElevator(elevator,sumTime,position):
     tempDir=False
     for psg in list(elevator.psg):
@@ -62,30 +77,32 @@ def takeElevator(elevator,sumTime,position):
                 position[elevator.floor].remove(psg)#離開樓層
                 sumTime+=1#每進入一個人花費一秒
     return tempDir
-#選樓層
+'''選樓層'''
 def whatFloor(elevator,position):
+    
+    
     f=elevator.floor
     '''1~max~1'''
     if elevator.dir=='up'and f < findMaxFloor(elevator.psg,position): #電梯方向 18:#
         f+=1
     else:
         elevator.dir='down'
-    if elevator.dir=='down' and f > 0: #電梯方向findMinFloor(elevator1.psg,position)
+    if elevator.dir=='down' and f > findMinFloor(elevator.psg,position): #電梯方向 0:#
         f-=1
     else:
         elevator.dir='up'
     elevator.floor= f
-# Gather our code in a main() function
+
 def main():
-    for i in range(100):        
+    #for i in range(100):        
         #a=[179,208,306,93,859,984,55,9,271,33]
         #a=[random.randint(1, 18) for _ in range(10)]#產生10個1~1000的亂數
         #b=[random.randint(1, 18) for _ in range(10)]#產生10個1~1000的亂數
         
         
         '''建立乘客'''
-        a=[(random.randint(1, 18),random.randint(1, 18)) for _ in range(50)]#產生10個1~1000的亂數
-        #a=[(1, 5), (1, 3), (1, 14), (1, 11), (1, 6), (1, 13), (1, 15), (1, 7), (1, 9), (1, 9), (1, 9), (18, 9), (2, 9)]
+        #a=[(random.randint(1, 18),random.randint(1, 18)) for _ in range(50)]#產生10個1~1000的亂數
+        a=[(1, 5), (1, 3), (1, 14), (1, 11), (1, 6), (1, 13), (1, 15), (1, 7), (1, 9), (1, 9), (1, 9), (18, 9), (2, 9)]
         #a=[(17, 5), (11, 3), (13, 8), (5, 16), (18, 16), (3, 6), (7, 1), (2, 1), (6, 13), (18, 8), (15, 9), (1, 8), (9, 12), (7, 3), (13, 6), (9, 10), (4, 6), (17, 16), (17, 14), (13, 16), (18, 10), (12, 18), (18, 8), (2, 4), (3, 1), (17, 13), (9, 11), (6, 9), (17, 3), (7, 14), (15, 10), (7, 1), (2, 16), (3, 16), (4, 2), (3, 4), (4, 7), (8, 2), (14, 18), (1, 10), (10, 5), (3, 15), (15, 9), (9, 2), (16, 7), (18, 11), (1, 16)]	
         
         #去除重複
@@ -126,14 +143,14 @@ def main():
             whatFloor(elevator2,position)#移動電梯
             if takeElevator(elevator1,sumTime1,position):#True停 False不停
                 sumTime1+=4#電梯開關加啟動煞車時間
-                #print('\nelevator=1')
-                #print('Floor=',elevator1.floor,'position=',position)
-                #print('\n\t乘客=',len(elevator1.psg),elevator1.psg)
+                
+                print('\nFloor=',elevator1.floor,' 等電梯的人=',position)
+                print('\n\televator=1 乘客=',len(elevator1.psg),elevator1.psg)
             if takeElevator(elevator2,sumTime2,position):#True停 False不停
                 sumTime2+=4#電梯開關加啟動煞車時間
-                #print('\nelevator=2 Floor=',elevator2.floor)
-                #print('position=',position)
-                #print('\n\t乘客=',len(elevator2.psg),elevator2.psg)
+                print()
+                print('\nFloor=',elevator2.floor,' 等電梯的人=',position)
+                print('\n\televator=2 乘客=',len(elevator2.psg),elevator2.psg)
                 
         print(sumTime1,'\t',sumTime2)
 if __name__ == '__main__':
